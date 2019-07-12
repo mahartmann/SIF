@@ -12,13 +12,14 @@ def getWordmap(textfile):
     lines = f.readlines()
     for (n,i) in enumerate(lines):
         i=i.split()
-        j = 1
-        v = []
-        while j < len(i):
-            v.append(float(i[j]))
-            j += 1
-        words[i[0]]=n
-        We.append(v)
+        if len(i) == 300+1:
+            j = 1
+            v = []
+            while j < len(i):
+                v.append(float(i[j]))
+                j += 1
+            words[i[0]]=n
+            We.append(v)
     return (words, np.array(We))
 
 def prepare_data(list_of_seqs):
@@ -281,8 +282,8 @@ def getWordWeight(weightfile, a=1e-3):
         if(len(i) > 0):
             i=i.split()
             if(len(i) == 2):
-                word2weight[i[0]] = float(i[1])
-                N += float(i[1])
+                word2weight[i[1]] = float(i[0])
+                N += float(i[0])
             else:
                 print(i)
     for key, value in word2weight.iteritems():
