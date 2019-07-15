@@ -1,4 +1,6 @@
 import sys
+import logging
+
 sys.path.append('../src')
 import data_io, params, SIF_embedding, codecs
 
@@ -7,11 +9,26 @@ def read_file(fname):
         lines = f.readlines()
     return [line.strip('\n') for line in lines]
 
+def setup_logging(exp_path='.', logfile='log.txt'):
+    # create a logger and set parameters
+    logfile = os.path.join(exp_path, logfile)
+    logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.DEBUG)
+    fileHandler = logging.FileHandler(logfile)
+    fileHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(fileHandler)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
 
+logging.info('Readind sentences')
 sentences = read_file('/home/lwp876/ira/data/ira_tweets_csv_hashed.csv.ru.tokenized.text.1000')
-
+logging.info('Read {} sentences'.format(len(sentences)))
 # input
+logging.info('Loading embeddings')
 wordfile = '/home/lwp876/resources/wiki.ru.align.vec' # word vector file, can be downloaded from GloVe website
+logging.info('Loading s')
 weightfile = '../auxiliary_data/ira_ru_freqs.txt' # each line is a word and its frequency
 weightpara = 1e-3 # the parameter in the SIF weighting scheme, usually in the range [3e-5, 3e-3]
 rmpc = 1 # number of principal components to remove in SIF weighting scheme
