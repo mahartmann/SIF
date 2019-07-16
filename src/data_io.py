@@ -2,7 +2,8 @@ from __future__ import print_function
 
 import numpy as np
 import pickle
-from tree import tree
+import os
+#from tree import tree
 #from theano import config
 
 def getWordmap(textfile):
@@ -22,6 +23,54 @@ def getWordmap(textfile):
             We.append(v)
     return (words, np.array(We))
 
+
+def load_embeddings_from_file(fname, dim, max_vocab=-1):
+    """
+    Reload pretrained embeddings from a text file.
+    """
+    word2id = {}
+    vectors = []
+
+    # load pretrained embeddings
+    with open(fname,  'r', encoding='utf-8') as f:
+        for i, line in enumerate(f):
+            if i == 0 and len(line.split()) == 2:
+                continue
+            else:
+
+                if len(line.rstrip().split(' ', 1)) < 2: continue
+
+                if len(line.rstrip().split(' ')) == dim+1:
+                    word, vect = line.rstrip().split(' ', 1)
+
+                    vect = np.fromstring(vect, sep=' ')
+                    if np.linalg.norm(vect) == 0:  # avoid to have null embeddings
+                        vect[0] = 0.01
+                    if  word not in word2id:
+                        word2id[word] = len(word2id)
+                        vectors.append(vect[None])
+                # for some ff embeddings of infrequent  word, the  words are mwes
+                elif len(line.rstrip().split(' ')) > dim +1:
+                    splt = line.rstrip().split(' ')
+                    word = '_'.join(splt[:len(splt)-dim])
+                    print('Fixed broken embedding for line {}'.format(word))
+                    vect = ' '.join(splt[-dim:])
+
+                    vect = np.fromstring(vect, sep=' ')
+                    if np.linalg.norm(vect) == 0:  # avoid to have null embeddings
+                        vect[0] = 0.01
+                    if word not in word2id:
+                        word2id[word] = len(word2id)
+                        vectors.append(vect[None])
+
+            if max_vocab > 0 and i >= max_vocab:
+                break
+
+    # compute new vocabulary / embeddings
+    id2word = {v: k for k, v in word2id.items()}
+    embeddings = np.concatenate(vectors, 0)
+    return embeddings, word2id, id2word,
+
 def prepare_data(list_of_seqs):
     lengths = [len(s) for s in list_of_seqs]
     n_samples = len(list_of_seqs)
@@ -34,23 +83,6 @@ def prepare_data(list_of_seqs):
     x_mask = np.asarray(x_mask, dtype='float32')
     return x, x_mask
 
-def lookupIDX(words,w):
-    w = w.lower()
-    if len(w) > 1 and w[0] == '#':
-        w = w.replace("#","")
-    if w in words:
-        return words[w]
-    elif 'UUUNKKK' in words:
-        return words['UUUNKKK']
-    else:
-        return len(words) - 1
-
-def getSeq(p1,words):
-    p1 = p1.split()
-    X1 = []
-    for i in p1:
-        X1.append(lookupIDX(words,i))
-    return X1
 
 def getSeqs(p1,p2,words):
     p1 = p1.split()
@@ -197,10 +229,21 @@ def sentences2idx(sentences, words):
     :param words: a dictionary, words['str'] is the indices of the word 'str'
     :return: x1, m1. x1[i, :] is the word indices in sentence i, m1[i,:] is the mask for sentence i (0 means no word at the location)
     """
-    seq1 = []
-    for i in sentences:
-        seq1.append(getSeq(i,words))
-    x1,m1 = prepare_data(seq1)
+    oov = set()
+    seqs = []
+    for sent in sentences:
+        seq = []
+        toks = sent.split()
+        for tok in toks:
+            if tok.lower() in words:
+                seq.append(words[tok.lower()])
+            else:
+                oov.add(tok.lower())
+        seqs.append(seq)
+    print(oov)
+    print(len(oov))
+
+    x1,m1 = prepare_data(seqs)
     return x1, m1
 
 
@@ -309,6 +352,16 @@ def seq2weight(seq, mask, weight4ind):
     weight = np.asarray(weight, dtype='float32')
     return weight
 
+
+def export_embeddings(embs, idx2sid, exp_path, lang, emb_dim, emb_name='sif_sent'):
+    fname = os.path.join(exp_path, '{}_{}_{}.txt'.format(emb_name, emb_dim, lang))
+
+    # text file
+    with open(fname, 'w', encoding='utf-8') as f:
+        for i in range(embs.shape[0]):
+            f.write("{} {}\n".format(idx2sid[i], " ".join('%.5f' % x for x in embs[i, :])))
+    f.close()
+
 def getIDFWeight(wordfile, save_file=''):
     def getDataFromFile(f, words):
         f = open(f,'r')
@@ -326,6 +379,8 @@ def getIDFWeight(wordfile, save_file=''):
         x1,m1 = prepare_data(seq1)
         x2,m2 = prepare_data(seq2)
         return x1,m1,x2,m2
+
+
 
     prefix = "../data/"
     farr = ["MSRpar2012"]
