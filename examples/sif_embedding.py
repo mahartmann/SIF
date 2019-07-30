@@ -36,16 +36,17 @@ def setup_logging(exp_path='.', logfile='log.txt'):
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
 
+lang = 'ru'
 logging.info('Reading sentences')
-sentences, idx2sid= read_file('/home/lwp876/ira/data/ira_tweets_csv_hashed.csv.ru.tokenized.text.100000')
+sentences, idx2sid= load_sentences('/home/lwp876/catPics/data/mh17/mh17_{}.tokenized.txt.text'.format(lang))
 #sentences, idx2sid = load_sentences('/home/mareike/PycharmProjects/sheffield/data/ira_tweets_csv_hashed.csv.ru.tokenized.10000')
 logging.info('Read {} sentences'.format(len(sentences)))
 # input
 logging.info('Loading embeddings')
-wordfile = '/home/lwp876/ira/resources/wiki.ru.align.vec' # word vector file, can be downloaded from GloVe website
+wordfile = '/home/lwp876/ira/resources/wiki.{}.align.vec'.format(lang) # word vector file, can be downloaded from GloVe website
 #wordfile = '/home/mareike/PycharmProjects/sheffield/data/wiki.ru.align.vec' # word vector file, can be downloaded from GloVe website
 logging.info('Loading frequencies')
-weightfile = '../auxiliary_data/ira_ru_freqs.txt' # each line is a word and its frequency
+weightfile = '../auxiliary_data/mh17_freqs_{}.txt'.format(lang) # each line is a word and its frequency
 #weightfile = '/home/mareike/PycharmProjects/sheffield/data/ira_tweets_csv_hashed.csv.ru.tokenized.freqs'
 weightpara = 1e-3 # the parameter in the SIF weighting scheme, usually in the range [3e-5, 3e-3]
 rmpc = 1 # number of principal components to remove in SIF weighting scheme
@@ -71,4 +72,4 @@ params.rmpc = rmpc
 embedding = SIF_embedding.SIF_embedding(We, x, w, params) # embedding[i,:] is the embedding for sentence i
 print(embedding.shape)
 
-export_embeddings(embedding, idx2sid, '.', lang = 'ru', emb_dim = 300)
+export_embeddings(embedding, idx2sid, '.', lang = lang, emb_dim = 300, emb_name='sif_sent_mh17')
