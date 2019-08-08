@@ -71,7 +71,7 @@ def main(args):
 
     # get SIF embedding
     embedding = SIF_embedding.SIF_embedding(We, x, w, sif_params)  # embedding[i,:] is the embedding for sentence i
-    export_embeddings(embedding, idx2sid, fname=args.outfile)
+    export_embeddings_for_browser(embedding, idx2sid, fname=args.outfile)
 
 
 if __name__=="__main__":

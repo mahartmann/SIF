@@ -359,6 +359,22 @@ def export_embeddings(embs, idx2sid, fname):
             f.write("{} {}\n".format(idx2sid[i], " ".join('%.5f' % x for x in embs[i, :])))
     f.close()
 
+
+def export_embeddings_for_browser(embs, idx2sid, fname):
+    # write embeddings
+    with open(fname + '.embs', 'w', encoding='utf-8') as f:
+        for i in range(embs.shape[0]):
+            f.write("{}\n".format("\t".join('%.5f' % x for x in embs[i, :])))
+    f.close()
+    with open(fname + '.meta', 'w', encoding='utf-8') as f:
+        f.write('Sentence_id\n')
+        for i in range(embs.shape[0]):
+            f.write("{}\n".format(idx2sid[i]))
+    f.close()
+
+
+    # write meta data
+
 def getIDFWeight(wordfile, save_file=''):
     def getDataFromFile(f, words):
         f = open(f,'r')
