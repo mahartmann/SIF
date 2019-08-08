@@ -2,7 +2,7 @@ import sys
 import logging
 import os
 import codecs
-from src.data_io import export_embeddings
+from src.data_io import export_embeddings_for_browser
 import argparse
 
 sys.path.append('../src')
