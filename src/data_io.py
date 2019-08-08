@@ -353,10 +353,7 @@ def seq2weight(seq, mask, weight4ind):
     return weight
 
 
-def export_embeddings(embs, idx2sid, exp_path, lang, emb_dim, emb_name='sif_sent'):
-    fname = os.path.join(exp_path, '{}_{}_{}.txt'.format(emb_name, emb_dim, lang))
-
-    # text file
+def export_embeddings(embs, idx2sid, fname):
     with open(fname, 'w', encoding='utf-8') as f:
         for i in range(embs.shape[0]):
             f.write("{} {}\n".format(idx2sid[i], " ".join('%.5f' % x for x in embs[i, :])))
